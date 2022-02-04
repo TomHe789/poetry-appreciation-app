@@ -42,6 +42,15 @@ app.get("/getPoetryInfo", function (req, res) {
   });
 });
 
+// 根据id查询诗词内容
+app.get("/getPoetryContent", (req, res) => {
+  // 获取请求参数
+  let { poetryId } = req.query;
+  getPoetryContent(poetryId, (str) => {
+    res.send(str);
+  });
+});
+
 // connection.end();
 
 // 获取用户信息
@@ -73,7 +82,6 @@ function userRegist(username, password, callback) {
 
 // 获取诗词信息 分页查询 currentPage pageSize
 function getPoetryInfo(currentPage, pageSize, callback) {
-
   let m = (currentPage - 1) * pageSize;
   let n = pageSize;
   // 分页查询 去掉前m条 返回后n条
@@ -90,6 +98,21 @@ function getPoetryInfo(currentPage, pageSize, callback) {
   });
 }
 
+// 根据id查询诗词内容
+function getPoetryContent(poetryId, callback) {
+  let sql = `SELECT * FROM poetry_info WHERE id = ${poetryId};`;
+  let str = "";
+  connection.query(sql, function (err, result) {
+    if (err) {
+      console.log("[SELECT ERROR]：", err.message);
+    }
+    str = JSON.stringify(result);
+    console.log(result);
+    callback(str);
+  });
+}
+
+// 监听服务器端口号 开启服务
 app.listen(3000, function () {
   console.log("server runing at 30000 port");
 });
