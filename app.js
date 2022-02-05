@@ -13,6 +13,7 @@ let connection = mysql.createConnection({
   user: "root",
   password: "heyi",
   database: "poetry_apprication",
+  multipleStatements: true,
 });
 
 connection.connect();
@@ -51,6 +52,15 @@ app.get("/getPoetryContent", (req, res) => {
   });
 });
 
+// 根据访问量排序诗词
+app.get("/getPoetryRatings", (req, res) => {
+  // 获取请求参数
+  let { currentPage, pageSize } = req.query;
+  getPoetryRateings(currentPage, pageSize, (str) => {
+    res.send(str);
+  });
+});
+
 // connection.end();
 
 // 获取用户信息
@@ -60,10 +70,11 @@ function getUserInfo(callback) {
   connection.query(sql, function (err, result) {
     if (err) {
       console.log("[SELECT ERROR]：", err.message);
+    } else {
+      str = JSON.stringify(result);
+      console.log(result);
+      callback(str);
     }
-    str = JSON.stringify(result);
-    console.log(result);
-    callback(str);
   });
 }
 
@@ -91,24 +102,54 @@ function getPoetryInfo(currentPage, pageSize, callback) {
   connection.query(sql, function (err, result) {
     if (err) {
       console.log("[SELECT ERROR]：", err.message);
+    } else {
+      str = JSON.stringify(result);
+      console.log(result);
+      callback(str);
     }
-    str = JSON.stringify(result);
-    console.log(result);
-    callback(str);
   });
 }
 
 // 根据id查询诗词内容
 function getPoetryContent(poetryId, callback) {
-  let sql = `SELECT * FROM poetry_info WHERE id = ${poetryId};`;
+  let sql1 = `SELECT * FROM poetry_info WHERE id = ${poetryId};`;
+  let sql2 = `UPDATE poetry_info set views=views+1 WHERE id = ${poetryId};`;
   let str = "";
+
+  connection.query(sql1, function (err, result) {
+    if (err) {
+      console.log("[SELECT ERROR]：", err.message);
+    } else {
+      // 诗词点击量+1
+      connection.query(sql2, function (err) {
+        if (err) {
+          console.log("[SELECT ERROR]：", err.message);
+        } else {
+          console.log(`${poetryId}号 访问量增加1`);
+        }
+      });
+
+      str = JSON.stringify(result);
+      console.log(result);
+      callback(str);
+    }
+  });
+}
+
+// 分页排序查询诗词信息 根据访问量进行排序
+function getPoetryRateings(currentPage, pageSize, callback) {
+  let m = (currentPage - 1) * pageSize;
+  let n = pageSize;
+  // 先降序排序 后分页查询
+  let sql = `SELECT * from poetry_info ORDER BY views DESC, id ASC LIMIT ${m}, ${n};`;
   connection.query(sql, function (err, result) {
     if (err) {
       console.log("[SELECT ERROR]：", err.message);
+    } else {
+      str = JSON.stringify(result);
+      console.log(result);
+      callback(str);
     }
-    str = JSON.stringify(result);
-    console.log(result);
-    callback(str);
   });
 }
 
