@@ -70,6 +70,14 @@ app.get("/getPoetryFuzzyQuery", (req, res) => {
   });
 })
 
+// 获取用户留言
+app.get("/getUserMessage", (req, res) => {
+  // 获取查询关键字
+  getUserMessage((str) => {
+    res.send(str);
+  });
+})
+
 // connection.end();
 
 // 获取用户信息
@@ -90,7 +98,7 @@ function getUserInfo(callback) {
 // 用户注册
 function userRegist(username, password, callback) {
   let str = true;
-  let addSql = `INSERT INTO user_info (username, password) VALUES (${username}, ${password})`;
+  let addSql = `INSERT INTO user_info (username, password) VALUES ("${username}", ${password})`;
   connection.query(addSql, function (err, result) {
     if (err) {
       console.log("[INSERT ERROR] - ", err.message);
@@ -165,6 +173,21 @@ function getPoetryRateings(currentPage, pageSize, callback) {
 // 模糊查询诗词接口
 function fuzzyQueryPoetry(keyword, callback){
   let sql = `SELECT * from poetry_info WHERE title like "%${keyword}%";`;
+  let str = "";
+  connection.query(sql, function (err, result) {
+    if (err) {
+      console.log("[SELECT ERROR]：", err.message);
+    } else {
+      str = JSON.stringify(result);
+      console.log(result);
+      callback(str);
+    }
+  });
+}
+
+// 获取用户留言
+function getUserMessage(callback){
+  let sql = "SELECT * FROM note_info";
   let str = "";
   connection.query(sql, function (err, result) {
     if (err) {
