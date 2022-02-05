@@ -61,6 +61,15 @@ app.get("/getPoetryRatings", (req, res) => {
   });
 });
 
+// 模糊查询诗词名称接口
+app.get("/getPoetryFuzzyQuery", (req, res) => {
+  // 获取查询关键字
+  let { keyword } = req.query;
+  fuzzyQueryPoetry(keyword, (str) => {
+    res.send(str);
+  });
+})
+
 // connection.end();
 
 // 获取用户信息
@@ -142,6 +151,21 @@ function getPoetryRateings(currentPage, pageSize, callback) {
   let n = pageSize;
   // 先降序排序 后分页查询
   let sql = `SELECT * from poetry_info ORDER BY views DESC, id ASC LIMIT ${m}, ${n};`;
+  connection.query(sql, function (err, result) {
+    if (err) {
+      console.log("[SELECT ERROR]：", err.message);
+    } else {
+      str = JSON.stringify(result);
+      console.log(result);
+      callback(str);
+    }
+  });
+}
+
+// 模糊查询诗词接口
+function fuzzyQueryPoetry(keyword, callback){
+  let sql = `SELECT * from poetry_info WHERE title like "%${keyword}%";`;
+  let str = "";
   connection.query(sql, function (err, result) {
     if (err) {
       console.log("[SELECT ERROR]：", err.message);
