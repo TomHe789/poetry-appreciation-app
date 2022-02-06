@@ -18,6 +18,21 @@ let connection = mysql.createConnection({
 
 connection.connect();
 
+// 用户登录校验
+app.post("/isAuthLogin", function (req, res) {
+  let { username, password } = req.body;
+  let successRes = { code: 1, msg: "登录成功" };
+  let failedRes = { code: -1, msg: "登录失败" };
+  console.log(username, password);
+  isAuthLogin(username, password, (str) => {
+    if (str) {
+      res.send(successRes);
+    } else {
+      res.send(failedRes);
+    }
+  });
+});
+
 // 获取用户信息
 app.get("/getUserInfo", function (req, res) {
   getUserInfo((str) => {
@@ -68,7 +83,7 @@ app.get("/getPoetryFuzzyQuery", (req, res) => {
   fuzzyQueryPoetry(keyword, (str) => {
     res.send(str);
   });
-})
+});
 
 // 获取用户留言
 app.get("/getUserMessage", (req, res) => {
@@ -76,9 +91,26 @@ app.get("/getUserMessage", (req, res) => {
   getUserMessage((str) => {
     res.send(str);
   });
-})
+});
 
 // connection.end();
+
+// 登录校验
+function isAuthLogin(username, password, callback) {
+  let addSql = `SELECT password FROM user_info WHERE username = "${username}"`;
+  let str = false;
+  // 通过sql查询密码
+  connection.query(addSql, function (err, result) {
+    if (err) {
+      console.log("[INSERT ERROR] - ", err.message);
+    }
+    // 校验数据库查询出的密码与用户输入的密码是否一致
+    if (result.length > 0 && result[0].password === password) {
+      str = true;
+    }
+    callback(str);
+  });
+}
 
 // 获取用户信息
 function getUserInfo(callback) {
@@ -171,7 +203,7 @@ function getPoetryRateings(currentPage, pageSize, callback) {
 }
 
 // 模糊查询诗词接口
-function fuzzyQueryPoetry(keyword, callback){
+function fuzzyQueryPoetry(keyword, callback) {
   let sql = `SELECT * from poetry_info WHERE title like "%${keyword}%";`;
   let str = "";
   connection.query(sql, function (err, result) {
@@ -186,7 +218,7 @@ function fuzzyQueryPoetry(keyword, callback){
 }
 
 // 获取用户留言
-function getUserMessage(callback){
+function getUserMessage(callback) {
   let sql = "SELECT * FROM note_info";
   let str = "";
   connection.query(sql, function (err, result) {
@@ -202,5 +234,5 @@ function getUserMessage(callback){
 
 // 监听服务器端口号 开启服务
 app.listen(3000, function () {
-  console.log("server runing at 30000 port");
+  console.log("server runing at 3000 port");
 });
