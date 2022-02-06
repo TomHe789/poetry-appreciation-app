@@ -93,6 +93,15 @@ app.get("/getUserMessage", (req, res) => {
   });
 });
 
+// 新增用户留言
+app.post("/addUserMessage", (req, res) => {
+  let { content, author, time, poetry_title } = req.body;
+  console.log(content, author, time, poetry_title);
+  addUserMessage(content, author, time, poetry_title, (str) => {
+    res.send(str);
+  });
+});
+
 // connection.end();
 
 // 登录校验
@@ -229,6 +238,19 @@ function getUserMessage(callback) {
       console.log(result);
       callback(str);
     }
+  });
+}
+
+// 用户新增留言
+function addUserMessage(content, author, time, poetry_title, callback) {
+  let str = true;
+  let addSql = `INSERT INTO note_info (content, author, time, poetry_title) VALUES ("${content}", "${author}", '${time}', "${poetry_title}");`;
+  connection.query(addSql, function (err, result) {
+    if (err) {
+      console.log("[INSERT ERROR] - ", err.message);
+      str = false;
+    }
+    callback(str);
   });
 }
 
